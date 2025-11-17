@@ -49,27 +49,51 @@ This project is a production-ready cost optimization tool for AWS infrastructure
 
 ## 🏗️ Architecture
 Flask Web Dashboard (0.0.0.0:5000)
+
 │
+
 ┌───────┴────────┐
+
 │ Scanner │
+
 │ Analyzer │
+
 │ Executor │
+
 └───────┬────────┘
+
 │
+
 AWS Services (Multi-Region)
+
 EC2 | EBS | RDS | CloudWatch | Cost Explorer
 
 ## 📁 File Structure
+
 python-aws-cost-optimizer/
+
 ├── src/
+
 │ ├── scanner.py # AWS resource scanner (boto3)
+
 │ ├── analyzer.py # Cost analysis engine
+
 │ ├── recommender.py # ML recommendation engine (sklearn)
+
 │ ├── executor.py # Auto-remediation engine
+
 │ ├── scheduler.py # APScheduler background jobs
+
 │ └── app.py # Flask web dashboard
+
 ├── templates/
+
 │ ├── index.html # Dashboard homepage
+
 │ └── recommendations.html # Recommendations list
+
 ├── static/
+
 │ └── css/style.css
+
+
