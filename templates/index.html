@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Cost Optimizer Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1> AWS Cost Optimizer</h1>
+            <p>Real-time infrastructure cost monitoring and optimization</p>
+        </header>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Total EC2 Instances</h3>
+                <p class="metric-value" id="total-ec2">--</p>
+            </div>
+            <div class="metric-card">
+                <h3>Idle Instances</h3>
+                <p class="metric-value alert" id="idle-ec2">--</p>
+            </div>
+            <div class="metric-card">
+<h3>Unattached Volumes</h3>
+<p class="metric-value warning" id="unattached-ebs">--</p>
+</div>
+<div class="metric-card">
+<h3>Monthly Savings Potential</h3>
+<p class="metric-value success" id="potential-savings">$--</p>
+</div>
+</div>
+    <div class="actions">
+        <button id="trigger-scan" class="btn btn-primary">🔍 Run Manual Scan</button>
+        <button id="view-recommendations" class="btn btn-secondary">📋 View Recommendations</button>
+    </div>
+
+    <div class="status" id="status-message"></div>
+
+    <div class="scan-results">
+        <h2>Latest Scan Results</h2>
+        <div id="scan-time" class="timestamp">--</div>
+        <div id="regions-summary"></div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

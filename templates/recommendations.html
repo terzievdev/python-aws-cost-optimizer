@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost Optimization Recommendations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1> Cost Optimization Recommendations</h1>
+            <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+        </header>
+
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="HIGH">High Priority</button>
+            <button class="filter-btn" data-filter="MEDIUM">Medium Priority</button>
+            <button class="filter-btn" data-filter="EC2_IDLE">EC2 Idle</button>
+            <button class="filter-btn" data-filter="EBS_UNATTACHED">EBS Unattached</button>
+        </div>
+
+        <div id="recommendations-list" class="recommendations-container">
+            <p class="loading">Loading recommendations...</p>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and display recommendations
+        async function loadRecommendations() {
+            try {
+                const response = await fetch('/api/latest-recommendations');
+                const data = await response.json();
+
+                if (data.error) {
+                    document.getElementById('recommendations-list').innerHTML =
+                        `<p class="error">No recommendations found. Run a scan first!</p>`;
+                    return;
+                }
+
+                displayRecommendations(data.recommendations);
+            } catch (error) {
+                console.error('Error loading recommendations:', error);
+                document.getElementById('recommendations-list').innerHTML =
+                    `<p class="error">Error loading recommendations: ${error.message}</p>`;
+            }
+        }
+
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendations-list');
+
+            if (!recommendations || recommendations.length === 0) {
+                container.innerHTML = '<p class="success"> No optimization recommendations! Your infrastructure is efficient.</p>';
+                return;
+            }
+
+            container.innerHTML = recommendations.map(rec => `
+                <div class="recommendation-card ${rec.severity.toLowerCase()}" data-type="${rec.type}">
+                    <div class="rec-header">
+                        <span class="severity-badge ${rec.severity.toLowerCase()}">${rec.severity}</span>
+                        <span class="type-badge">${rec.type}</span>
+                    </div>
+                    <div class="rec-body">
+                        <h3>${rec.resource_id}</h3>
+                        <p><strong>Region:</strong> ${rec.region}</p>
+                        <p><strong>Issue:</strong> ${rec.issue}</p>
+                        <p><strong>Recommendation:</strong> ${rec.recommendation}</p>
+                        <p class="savings"> <strong>Monthly Savings:</strong> $${rec.monthly_savings.toFixed(2)}</p>
+                    </div>
+                    <div class="rec-actions">
+                        <button class="btn btn-success btn-sm" onclick="executeAction('${rec.resource_id}', '${rec.action}', '${rec.region}')">
+                             Execute ${rec.action}
+                        </button>
+                        <button class="btn btn-danger btn-sm"> Ignore</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function executeAction(resourceId, action, region) {
+            if (!confirm(`Execute ${action} on ${resourceId}?\n\nThis will make changes to your AWS resources!`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/execute-action', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({resource_id: resourceId, action: action, region: region})
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(' Action executed successfully!');
+                    loadRecommendations(); // Reload
+                } else {
+                    alert(' Error: ' + result.error);
+                }
+            } catch (error) {
+                alert(' Error executing action: ' + error.message);
+            }
+        }
+
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const filter = btn.dataset.filter;
+                const cards = document.querySelectorAll('.recommendation-card');
+
+                cards.forEach(card => {
+                    if (filter === 'all') {
+                        card.style.display = 'block';
+                    } else if (filter === 'HIGH' || filter === 'MEDIUM') {
+                        card.style.display = card.querySelector('.severity-badge').textContent === filter ? 'block' : 'none';
+                    } else {
+                        card.style.display = card.dataset.type === filter ? 'block' : 'none';
+                    }
+                });
+            });
+        });
+
+        // Load on page load
+        loadRecommendations();
+    </script>
+</body>
+</html>
